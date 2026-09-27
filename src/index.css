@@ -1,0 +1,41 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:is(.dark *));
+
+:root { --background: #ffffff; --foreground: #171717; }
+.dark  { --background: #0a0a0a; --foreground: #ededed; }
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.row-insert { animation: row-insert 1.6s ease-out; }
+@keyframes row-insert {
+  0%   { transform: translateY(-8px); opacity: 0; background-color: rgb(99 102 241 / 0.18); }
+  35%  { transform: translateY(0);    opacity: 1; background-color: rgb(99 102 241 / 0.18); }
+  100% { background-color: transparent; }
+}
+
+.bucket-pulse { animation: bucket-pulse 0.9s ease-in-out 3; }
+@keyframes bucket-pulse { 0%,100% { opacity: 0.25; } 50% { opacity: 0.9; } }
+
+[data-testid="chart"][data-loading="true"]::before {
+  content: ""; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, transparent, #3b82f6, transparent);
+  animation: chart-loading 1s linear infinite;
+}
+@keyframes chart-loading { from { transform: translateX(-100%); } to { transform: translateX(100%); } }
+
+.recharts-brush-texts { display: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .row-insert, .bucket-pulse,
+  [data-testid="chart"][data-loading="true"]::before { animation: none; }
+}
