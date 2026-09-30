@@ -27,8 +27,8 @@ printf '\n=== go-dashboard-frontend ===\n\n'
 printf '  [1] Local  — Vite dev server on localhost (no GCP cost)'
 (( _local_running )) && printf ' [running]' || printf ' [not detected]'
 printf '\n'
-printf '  [2] Lite   — GCP: Cloud Run (scales to zero)\n'
-printf '  [3] Full   — GCP: Cloud Run\n'
+printf '  [2] Lite   — GCP: Cloud Run · 4M rows · scales to zero · minimal cost\n'
+printf '  [3] Full   — GCP: Cloud Run · 4M rows · always warm · considerable cost\n'
 printf '\nChoice [1/2/3, default 2]: '
 read -r _MODE
 case "${_MODE:-2}" in
