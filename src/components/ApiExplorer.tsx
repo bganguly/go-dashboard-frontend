@@ -782,7 +782,7 @@ export default function ApiExplorer() {
             )}
             <span style={{ fontSize: "0.6875rem", padding: "0.125rem 0.5rem", borderRadius: "9999px",
               background: "rgba(99,102,241,0.12)", border: "1px solid rgba(99,102,241,0.3)", color: "#a5b4fc" }}>
-              Spring Boot 4.1 · Java 21 · GCP · Cloud Run
+              Go 1.23 · Gin · pgx v5 · GCP · Cloud Run
             </span>
           </div>
         </div>
@@ -793,10 +793,10 @@ export default function ApiExplorer() {
         <p style={{ fontSize: "0.75rem", fontWeight: 500, letterSpacing: ".1em", textTransform: "uppercase",
           color: "#818cf8", marginBottom: "0.75rem" }}>API Explorer</p>
         <h1 style={{ fontSize: "1.5rem", fontWeight: 700, color: "#f4f4f5", marginBottom: "0.5rem" }}>
-          Live API — Orders Dashboard (GCP · Spring Boot 4.1)
+          Live API — Orders Dashboard (GCP · Go 1.23)
         </h1>
         <p style={{ fontSize: "0.875rem", color: "#71717a", maxWidth: "36rem" }}>
-          Run real requests against the Spring Boot REST API backed by PostgreSQL 16 with pg_bigm full-text search.
+          Run real requests against the Go REST API backed by Neon Postgres with pg_bigm full-text search.
         </p>
         <div style={{ display: "inline-flex", alignItems: "center", gap: "0.375rem",
           padding: "0.375rem 0.75rem", borderRadius: "0.5rem", marginTop: "1rem",
