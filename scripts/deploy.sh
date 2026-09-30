@@ -39,7 +39,7 @@ if [[ "$_TARGET" == "remote" ]]; then
   SERVICE_NAME="go-dash-${DEPLOY_MODE}-frontend"
   BACKEND_ENV_FILE="${BACKEND_DIR}/.env.gcp.${DEPLOY_MODE}"
   FRONTEND_ENV_FILE="$ROOT_DIR/.env.gcp.${DEPLOY_MODE}"
-  [[ -f "$BACKEND_ENV_FILE" ]] && source "$BACKEND_ENV_FILE"
+  [[ -f "$BACKEND_ENV_FILE" ]] && BACKEND_URL=$(grep -E '^BACKEND_URL=' "$BACKEND_ENV_FILE" | cut -d= -f2- | tr -d '"' || true)
 fi
 
 if [[ "$_TARGET" == "local" ]]; then
