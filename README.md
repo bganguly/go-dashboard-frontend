@@ -1,9 +1,8 @@
-# dashboard-frontend — React 19 + TypeScript + GCP Cloud Run
+# go-dashboard-frontend — React 19 + TypeScript + GCP Cloud Run
 
 Production-grade **React 19 / TypeScript** SPA for the orders dashboard, delivering sub-second
 search and chart responses across 4 M+ orders. Served via multi-stage Docker build (Vite → Nginx),
-deployed as a GCP Cloud Run service managed by **Pulumi TypeScript IaC**. Nginx acts as a BFF proxy —
-routing `/api/*` to the Spring Boot backend with TLS SNI passthrough.
+deployed as a GCP Cloud Run service. Nginx acts as a BFF proxy — routing `/api/*` to the Go backend.
 
 ---
 
@@ -12,7 +11,7 @@ routing `/api/*` to the Spring Boot backend with TLS SNI passthrough.
 | Endpoint | URL |
 |---|---|
 | **App** | available on demand via `deploy.sh` |
-| **Portfolio demo** | https://bganguly.github.io/#orders_dashboard |
+| **Portfolio demo** | https://bganguly.github.io/#go_dashboard |
 
 > Cloud Run scales to zero when idle; run `deploy.sh` to provision GCP infrastructure and start the service.
 
@@ -42,52 +41,45 @@ routing `/api/*` to the Spring Boot backend with TLS SNI passthrough.
 │   └──────────────────┘                                                  │
 │           │ image pull                                                  │
 │           ▼                                                             │
-│   ┌───────────────────────────────────────────────────────────────┐     │
-│   │                       dash-vpc (private)                      │     │
-│   │                                                               │     │
-│   │  Cloud Run: dash-frontend          Cloud Run: dash-backend    │     │
-│   │  ┌─────────────────────────┐       ┌──────────────────────┐   │     │
-│   │  │ Nginx (port 80)         │       │ Spring Boot (8080)   │   │     │
-│   │  │ • serves Vite dist      │ HTTPS │ • REST /api/*        │   │     │
-│   │  │ • proxies /api/* ───────┼──────►│ • Flyway migrations  │   │     │
-│   │  │   proxy_ssl_server_name │  SNI  │ • 1–5 instances      │   │     │
-│   │  │ • 0–3 instances         │       └──────────┬───────────┘   │     │
-│   │  └─────────────────────────┘                  │               │     │
-│   │           ▲                          Direct VPC Egress        │     │
-│   └───────────┼──────────────────────────────────┼───────────────┘     │
-│               │ HTTPS                             │ private IP           │
-│           Browser                    ┌────────────▼───────────┐        │
-│                                      │  Cloud SQL PG 16       │        │
-│                                      │  4 M+ orders           │        │
-│                                      │  GIN trigram index     │        │
-│                                      │  pre-agg summary tables│        │
-│                                      └────────────────────────┘        │
-│                                                                         │
-│   Pulumi TypeScript (infra/index.ts) manages all resources above        │
-│   Secret Manager: dash-database-url (injected into backend at runtime)  │
+│   Cloud Run: go-dash-{lite|full}-frontend                               │
+│   ┌─────────────────────────┐                                           │
+│   │ Nginx (port 8080)       │       Cloud Run: go-dash-{lite|full}-backend │
+│   │ • serves Vite dist      │       ┌──────────────────────┐           │
+│   │ • proxies /api/* ───────┼──────►│ Go 1.23 / Gin (8080) │           │
+│   │                         │ HTTPS │ • REST /api/*        │           │
+│   │ • 0–1/1–3 instances     │       │ • pgx migrations     │           │
+│   └─────────────────────────┘       │ • 0–1/0–5 instances  │           │
+│           ▲                         └──────────┬───────────┘           │
+│           │ HTTPS                              │                        │
+│       Browser                    ┌─────────────▼──────────┐            │
+│                                  │  Neon serverless PG     │            │
+│                                  │  4 M+ orders            │            │
+│                                  │  GIN trigram index      │            │
+│                                  │  pre-agg summary tables │            │
+│                                  └────────────────────────┘            │
 └─────────────────────────────────────────────────────────────────────────┘
 
 Deploy flow
 ───────────
 local machine
   └─ deploy.sh
-       ├─ [1] local   → Vite dev server on :3006
+       ├─ [1] local   → Vite dev server on :5173
        ├─ [2] lite    → gcloud builds submit → Artifact Registry
-       │                → pulumi up (min=0 Cloud Run)
+       │                → gcloud run deploy (min=0 Cloud Run)
        └─ [3] full    → gcloud builds submit → Artifact Registry
-                        → pulumi up (min=1 Cloud Run)
+                        → gcloud run deploy (min=1 Cloud Run)
 ```
 
 ### Key design decisions
 
 | Concern | Approach |
 |---|---|
-| **BFF proxy** | Nginx forwards `/api/*` to Spring Boot with `proxy_ssl_server_name on` for Cloud Run SNI; browser sees a single origin, no CORS. |
+| **BFF proxy** | Nginx forwards `/api/*` to Go backend via `${BACKEND_URL}` env var substituted at container start via `nginx.conf.template`; browser sees a single origin, no CORS. |
 | **Image build** | `gcloud builds submit` — no local Docker required. Content-hash tag skips rebuilds when source is unchanged. |
-| **Search** | GIN trigram index on denormalized `search_text` column in Cloud SQL; sub-second on 4 M+ rows without touching raw `orders`. |
-| **Aggregates** | Pre-aggregated summary tables in Cloud SQL — chart queries never hit the raw `orders` table. |
+| **Search** | GIN trigram index on denormalized `search_text` column; sub-second on 4 M+ rows. |
+| **Aggregates** | Pre-aggregated summary tables — chart queries never hit the raw `orders` table. |
 | **Pagination** | Keyset cursor `(placedAt, orderId)` — O(1) deep-page navigation, no OFFSET scans. |
-| **IaC** | Pulumi TypeScript (`infra/index.ts`) — Cloud Run service, IAM, VPC connector, `BACKEND_URL` env all declared as code. |
+| **IaC** | `gcloud run deploy` direct from `deploy.sh` — no Pulumi or Terraform required. |
 
 ---
 
@@ -95,12 +87,11 @@ local machine
 
 | Component | Implementation |
 |---|---|
-| **React / TypeScript front-end** | React 19, TypeScript, Vite, Tailwind CSS, Recharts |
-| **BFF layer** | Nginx reverse proxy — `/api/*` → Spring Boot (TLS + `proxy_ssl_server_name on` for Cloud Run SNI) |
-| **Serverless / cloud-native** | Cloud Run — 0–3 instances, scales to zero, no node management |
-| **IaC** | Pulumi TypeScript (`infra/index.ts`) — frontend Cloud Run service, IAM, and `BACKEND_URL` env declared as code |
+| **React / TypeScript front-end** | React 19, TypeScript, Vite, Tailwind CSS v4, Recharts |
+| **BFF layer** | Nginx reverse proxy — `/api/*` → Go backend via `${BACKEND_URL}` env var |
+| **Serverless / cloud-native** | Cloud Run — scales to zero (lite) or min-1 (full), no node management |
 | **Image build** | `gcloud builds submit` — remote Cloud Build, no local Docker |
-| **Performance** | Sub-second chart from pre-aggregated Cloud SQL tables; sub-second search via GIN trigram index on `search_text` |
+| **Performance** | Sub-second chart from pre-aggregated tables; sub-second search via GIN trigram index on `search_text` |
 
 ---
 
@@ -108,19 +99,19 @@ local machine
 
 ```bash
 ./scripts/deploy.sh      # [1] local dev · [2] lite (scale-to-zero) · [3] full (min 1 instance)
-./scripts/infra-down.sh  # [1] stop local · [2] destroy lite · [3] destroy full
+./scripts/infra-down.sh  # [1] lite teardown · [2] full teardown · [3] both
 ```
 
 | Action | Script | Prompt |
 |---|---|---|
-| Start local dev server (port 3006) | `./scripts/deploy.sh` | `[1]` |
+| Start local dev server (port 5173) | `./scripts/deploy.sh` | `[1]` |
 | Deploy lite to GCP (scale-to-zero) | `./scripts/deploy.sh` | `[2]` |
 | Deploy full to GCP (always warm) | `./scripts/deploy.sh` | `[3]` |
-| Stop local dev server | `./scripts/infra-down.sh` | `[1]` |
-| Teardown GCP lite stack | `./scripts/infra-down.sh` | `[2]` |
-| Teardown GCP full stack | `./scripts/infra-down.sh` | `[3]` |
+| Teardown GCP lite stack | `./scripts/infra-down.sh` | `[1]` |
+| Teardown GCP full stack | `./scripts/infra-down.sh` | `[2]` |
+| Teardown both GCP stacks | `./scripts/infra-down.sh` | `[3]` |
 
-Deploy backend first (`springboot-dashboard-backend`) before deploying this service — `deploy.sh` reads the backend's Pulumi output for `BACKEND_URL`.
+Deploy backend first (`go-dashboard-backend`) before deploying this service — `deploy.sh` reads the backend's `.env.gcp.{mode}` file for `BACKEND_URL`.
 
 Override the backend target for local dev:
 
@@ -134,7 +125,7 @@ BACKEND_URL=http://other-host:8080 ./scripts/deploy.sh
 |---|---|
 | **Cloud Run (lite)** | Scale-to-zero — ~$0 when idle |
 | **Cloud Run (full)** | Min 1 instance — ~$5–10/mo |
-| **Cloud SQL** | Billed continuously — run `infra-down.sh` in the backend repo when not demoing |
+| **Neon Postgres** | Free tier — auto-suspends when idle |
 | **Artifact Registry** | Negligible at demo image count |
 
 ---
@@ -144,9 +135,9 @@ BACKEND_URL=http://other-host:8080 ./scripts/deploy.sh
 > **4 M+ orders** served with sub-second search and chart responses. Full-text search hits a single GIN trigram index on `search_text`; chart aggregates hit pre-aggregated summary tables — neither touches the raw `orders` table on the hot path.
 
 ```
-Browser ──HTTPS──► Nginx / Cloud Run ──proxy /api/* (SNI)──► Spring Boot / Cloud Run ──VPC──► Cloud SQL PG 16
-                   dash-frontend (this repo)                 dash-backend                      4 M+ rows
-                   0–3 instances                             1–5 instances                     GIN trigram index
+Browser ──HTTPS──► Nginx / Cloud Run ──proxy /api/*──► Go 1.23 / Cloud Run ──► Neon PG
+                   go-dash-{mode}-frontend              go-dash-{mode}-backend    4 M+ rows
+                   0–1/1–3 instances                    0–1/0–5 instances         GIN trigram index
 ```
 
 ---
@@ -158,4 +149,4 @@ Browser ──HTTPS──► Nginx / Cloud Run ──proxy /api/* (SNI)──►
 - **Aggregates chart** — stacked bar chart of daily orders by product category; sub-second from pre-aggregated tables, never queries raw orders
 - **Date brush** — Recharts brush on the aggregates chart; drag to zoom into any date window
 - **Dark mode** — system-preference detection via `useIsDark` hook; light / dark / system toggle
-- **BFF proxy** — Nginx forwards `/api/*` to Spring Boot with `proxy_ssl_server_name on`; browser sees a single origin, no CORS
+- **BFF proxy** — Nginx forwards `/api/*` to Go backend via `${BACKEND_URL}`; browser sees a single origin, no CORS
