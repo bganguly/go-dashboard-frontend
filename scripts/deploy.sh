@@ -27,12 +27,10 @@ printf '\n=== go-dashboard-frontend ===\n\n'
 printf '  [1] Local  — Vite dev server on localhost (no GCP cost)'
 (( _local_running )) && printf ' [running]' || printf ' [not detected]'
 printf '\n'
-printf '  [2] Lite   — GCP: Cloud Run · 4M rows · scales to zero · minimal cost\n'
-printf '  [3] Full   — GCP: Cloud Run · 4M rows · always warm · considerable cost\n'
-printf '\nChoice [1/2/3, default 2]: '
+printf '  [2] Lite   — GCP: Cloud Run · scales to zero · minimal cost\n'
+printf '\nChoice [1/2, default 2]: '
 read -r _MODE
 case "${_MODE:-2}" in
-  3) _TARGET="remote"; DEPLOY_MODE="full"  ;;
   2) _TARGET="remote"; DEPLOY_MODE="lite"  ;;
   *) _TARGET="local";  DEPLOY_MODE=""      ;;
 esac
@@ -170,11 +168,7 @@ fi
 _STEP="cloud run deploy"
 gcloud services enable run.googleapis.com --project "$GCP_PROJECT"
 
-if [[ "$DEPLOY_MODE" == "lite" ]]; then
-  _MIN_INST=0; _MAX_INST=1; _MEM="256Mi"; _CPU=1
-else
-  _MIN_INST=1; _MAX_INST=3; _MEM="512Mi"; _CPU=1
-fi
+_MIN_INST=0; _MAX_INST=1; _MEM="256Mi"; _CPU=1
 
 printf '\n=== deploying Cloud Run service: %s ===\n' "$SERVICE_NAME"
 gcloud run deploy "$SERVICE_NAME" \
