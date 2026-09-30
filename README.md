@@ -45,7 +45,7 @@ deployed as a GCP Cloud Run service. Nginx acts as a BFF proxy — routing `/api
 │   ┌─────────────────────────┐                                           │
 │   │ Nginx (port 8080)       │       Cloud Run: go-dash-{lite|full}-backend │
 │   │ • serves Vite dist      │       ┌──────────────────────┐           │
-│   │ • proxies /api/* ───────┼──────►│ Go 1.23 / Gin (8080) │           │
+│   │ • proxies /api/* ───────┼──────►│ Go 1.25 / Gin (8080) │           │
 │   │                         │ HTTPS │ • REST /api/*        │           │
 │   │ • 0–1/1–3 instances     │       │ • pgx migrations     │           │
 │   └─────────────────────────┘       │ • 0–1/0–5 instances  │           │
@@ -135,7 +135,7 @@ BACKEND_URL=http://other-host:8080 ./scripts/deploy.sh
 > **4 M+ orders** served with sub-second search and chart responses. Full-text search hits a single GIN trigram index on `search_text`; chart aggregates hit pre-aggregated summary tables — neither touches the raw `orders` table on the hot path.
 
 ```
-Browser ──HTTPS──► Nginx / Cloud Run ──proxy /api/*──► Go 1.23 / Cloud Run ──► Neon PG
+Browser ──HTTPS──► Nginx / Cloud Run ──proxy /api/*──► Go 1.25 / Cloud Run ──► Neon PG
                    go-dash-{mode}-frontend              go-dash-{mode}-backend    4 M+ rows
                    0–1/1–3 instances                    0–1/0–5 instances         GIN trigram index
 ```
