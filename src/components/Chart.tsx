@@ -173,7 +173,7 @@ export default function Chart({ endpoint = "/api/aggregates", topN = DEFAULT_TOP
       entries.push({ key: OTHER_KEY, orders: othersOrders });
     }
     return entries.sort((a, b) => b.orders - a.orders);
-  }, [categoryTotals, topCategories, withOther]);
+  }, [categoryTotals, topCategories, withOther, matchedOrders]);
 
   const seriesKeys = useMemo(() => seriesRanked.filter(s => showOthers || s.key !== OTHER_KEY).map(s => s.key), [seriesRanked, showOthers]);
   const colorMap   = useMemo(() => { const m = new Map<string,string>(); topCategories.forEach((c,i) => m.set(c, COLORS[i % COLORS.length])); return m; }, [topCategories]);

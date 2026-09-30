@@ -108,6 +108,20 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-zinc-50 font-sans dark:bg-black">
+      <a
+        href={`https://bganguly.github.io/?open=${new URLSearchParams(window.location.search).get('returnTo') || 'go_dashboard'}`}
+        onClick={e => {
+          e.preventDefault();
+          const key = new URLSearchParams(window.location.search).get('returnTo') || 'go_dashboard';
+          const url = `https://bganguly.github.io/?open=${key}`;
+          try { if (window.opener && !window.opener.closed) { window.opener.location.href = url; window.close(); return; } } catch (_) {}
+          window.location.href = url;
+        }}
+        className="fixed top-3 left-3 z-50 inline-flex items-center gap-1 px-3 py-1.5 rounded-md text-xs font-medium no-underline transition-colors"
+        style={{ background: 'rgba(0,0,0,0.65)', border: '1px solid rgba(255,255,255,0.12)', color: '#d4d4d8' }}
+        onMouseEnter={e => (e.currentTarget.style.color = '#fff')}
+        onMouseLeave={e => (e.currentTarget.style.color = '#d4d4d8')}
+      >← Portfolio</a>
       <main className="w-full px-5 py-8">
         <header className="mb-6 flex items-start justify-between gap-4">
           <div>
