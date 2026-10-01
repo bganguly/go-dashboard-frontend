@@ -152,33 +152,13 @@ else
   aws s3 cp "$_tmpzip" "s3://${SRC_BUCKET}/go-dash-frontend-source.zip" >/dev/null
   rm -f "$_tmpzip"
 
-  _tmpbspec="${TMPDIR:-/tmp}/go-dash-fe-buildspec-$$.yml"
-  cat > "$_tmpbspec" <<'BSPEC'
-version: 0.2
-phases:
-  pre_build:
-    commands:
-      - aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws
-      - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $ECR_URI
-      - docker pull $IMAGE_CACHE || true
-  build:
-    commands:
-      - docker build --cache-from $IMAGE_CACHE -t $IMAGE -t $IMAGE_CACHE .
-  post_build:
-    commands:
-      - docker push $IMAGE
-      - docker push $IMAGE_CACHE
-BSPEC
-
   printf 'Starting CodeBuild build...\n'
   BUILD_ID=$(aws codebuild start-build \
     --project-name "$CODEBUILD_PROJECT" \
-    --buildspec-override "file://${_tmpbspec}" \
     --environment-variables-override \
       "[{\"name\":\"ECR_URI\",\"value\":\"${ECR_URI}\"},{\"name\":\"IMAGE\",\"value\":\"${IMAGE}\"},{\"name\":\"IMAGE_CACHE\",\"value\":\"${IMAGE_CACHE}\"}]" \
     --region "$AWS_REGION" \
     --query 'build.id' --output text)
-  rm -f "$_tmpbspec"
   printf '  Build ID: %s\n' "$BUILD_ID"
 
   _cb_elapsed=0
