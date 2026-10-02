@@ -781,7 +781,7 @@ export default function ApiExplorer() {
             )}
             <span style={{ fontSize: "0.6875rem", padding: "0.125rem 0.5rem", borderRadius: "9999px",
               background: "rgba(99,102,241,0.12)", border: "1px solid rgba(99,102,241,0.3)", color: "#a5b4fc" }}>
-              Go 1.23 · Gin · pgx v5 · GCP · Cloud Run
+              Go 1.23 · Gin · pgx v5 · AWS · App Runner
             </span>
           </div>
         </div>
@@ -792,7 +792,7 @@ export default function ApiExplorer() {
         <p style={{ fontSize: "0.75rem", fontWeight: 500, letterSpacing: ".1em", textTransform: "uppercase",
           color: "#818cf8", marginBottom: "0.75rem" }}>API Explorer</p>
         <h1 style={{ fontSize: "1.5rem", fontWeight: 700, color: "#f4f4f5", marginBottom: "0.5rem" }}>
-          Live API — Orders Dashboard (GCP · Go 1.23)
+          Live API — Orders Dashboard (AWS · Go 1.23)
         </h1>
         <p style={{ fontSize: "0.875rem", color: "#71717a", maxWidth: "36rem" }}>
           Run real requests against the Go REST API backed by Neon Postgres with pg_bigm full-text search.
