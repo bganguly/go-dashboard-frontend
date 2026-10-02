@@ -299,7 +299,7 @@ function OrdersCard() {
   async function run() {
     setLoading(true); setErr(null); setResult(null);
     try {
-      const r = await fetchTimed("/api/orders?pageSize=10&sort=placedAt&dir=desc");
+      const r = await fetchTimed("/api/orders?size=10&sort=placedAt,desc");
       setResult(r);
     } catch (e) { setErr(String(e)); }
     setLoading(false);
@@ -313,9 +313,8 @@ function OrdersCard() {
     <Card path="/api/orders" subtitle="Latest orders — paginated, sorted by date descending">
       <div style={ROW}>
         <div style={PARAMS}>
-          <MonoParam label="pageSize" val="10" />
-          <MonoParam label="sort" val="placedAt" />
-          <MonoParam label="dir" val="desc" />
+          <MonoParam label="size" val="10" />
+          <MonoParam label="sort" val="placedAt,desc" />
         </div>
         <RunBtn onClick={run} loading={loading} />
       </div>
@@ -342,7 +341,7 @@ function SearchCard() {
     if (!q.trim()) return;
     setLoading(true); setErr(null); setResult(null);
     try {
-      const r = await fetchTimed("/api/orders?q=" + encodeURIComponent(q.trim()) + "&pageSize=10");
+      const r = await fetchTimed("/api/orders?q=" + encodeURIComponent(q.trim()) + "&size=10");
       setResult(r);
     } catch (e) { setErr(String(e)); }
     setLoading(false);
@@ -364,7 +363,7 @@ function SearchCard() {
               color: "#e4e4e7", borderRadius: "0.5rem", padding: "0.375rem 0.75rem",
               fontSize: "0.8rem", fontFamily: "monospace", outline: "none", width: "220px" }}
           />
-          <MonoParam label="pageSize" val="10" />
+          <MonoParam label="size" val="10" />
         </div>
         <RunBtn onClick={run} loading={loading} />
       </div>

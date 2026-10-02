@@ -260,12 +260,11 @@ export default function SearchTable({
       try {
         const params = new URLSearchParams({
           q,
-          page: String(p),
-          pageSize: String(pageSize),
+          page: String(p - 1),
+          size: String(pageSize),
         });
         if (sortCol) {
-          params.set("sort", sortCol);
-          params.set("dir", sortDir);
+          params.set("sort", `${sortCol},${sortDir}`);
         }
         appendFilterParams(params, f);
         const res = await fetch(`${endpoint}?${params}`, {
@@ -314,10 +313,9 @@ export default function SearchTable({
       try {
         const params = new URLSearchParams({
           q,
-          page: String(targetPage),
-          pageSize: String(pageSize),
-          sort: "placedAt",
-          dir: "desc",
+          page: String(targetPage - 1),
+          size: String(pageSize),
+          sort: "placedAt,desc",
           cursorId: String(cursorId),
           cursorPlacedAt,
           cursorDir: direction,
