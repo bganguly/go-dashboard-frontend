@@ -109,11 +109,11 @@ export default function App() {
   return (
     <div className="min-h-screen bg-zinc-50 font-sans dark:bg-black">
       <a
-        href={`https://bganguly.github.io/?open=${new URLSearchParams(window.location.search).get('returnTo') || 'go_dashboard'}`}
+        href={`https://bganguly.github.io/#${new URLSearchParams(window.location.search).get('returnTo') || 'go_dashboard'}`}
         onClick={e => {
           e.preventDefault();
           const key = new URLSearchParams(window.location.search).get('returnTo') || 'go_dashboard';
-          const url = `https://bganguly.github.io/?open=${key}`;
+          const url = `https://bganguly.github.io/#${key}`;
           try { if (window.opener && !window.opener.closed) { window.opener.location.href = url; window.close(); return; } } catch (_) {}
           window.location.href = url;
         }}
