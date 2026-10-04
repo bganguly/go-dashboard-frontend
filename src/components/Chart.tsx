@@ -76,6 +76,7 @@ export default function Chart({ endpoint = "/api/aggregates", topN = DEFAULT_TOP
   const abortRef = useRef<AbortController | null>(null);
   const dragTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [apiTotal, setApiTotal] = useState<number | null>(null);
+  const stableTotalRef = useRef<number | null>(null);
   // A brush drag calls fetchAggregates directly, then (via onRangeChange)
   // updates the parent's filters — which changes filters?.from/to and
   // re-fires the effect below with the exact same resulting request. Track
@@ -154,10 +155,10 @@ export default function Chart({ endpoint = "/api/aggregates", topN = DEFAULT_TOP
     () => rawData.reduce((sum, day) => sum + Object.values(day.categories ?? {}).reduce((s, c) => s + (c.totalOrders ?? 0), 0), 0),
     [rawData],
   );
-  const matchedOrders = apiTotal ?? summedCategoryOrders;
+  const matchedOrders = apiTotal ?? stableTotalRef.current ?? summedCategoryOrders;
 
   useEffect(() => {
-    if (apiTotal != null) onTotalChangeRef.current?.(apiTotal);
+    if (apiTotal != null) { stableTotalRef.current = apiTotal; onTotalChangeRef.current?.(apiTotal); }
   }, [apiTotal]);
 
   const categoryTotals = useMemo(() => computeTotals(rawData), [rawData]);
