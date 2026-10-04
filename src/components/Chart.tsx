@@ -167,11 +167,8 @@ export default function Chart({ endpoint = "/api/aggregates", topN = DEFAULT_TOP
   const seriesRanked = useMemo(() => {
     const entries = topCategories.map(cat => ({ key: cat, orders: categoryTotals.find(c => c.category === cat)?.orders ?? 0 }));
     if (withOther) {
-      const topSet = new Set(topCategories);
-      const othersOrders = categoryTotals
-        .filter(c => !topSet.has(c.category) && !isOther(c.category))
-        .reduce((s, c) => s + c.orders, 0);
-      entries.push({ key: OTHER_KEY, orders: othersOrders });
+      const othersEntry = categoryTotals.find(c => isOther(c.category));
+      entries.push({ key: OTHER_KEY, orders: othersEntry?.orders ?? 0 });
     }
     return entries.sort((a, b) => b.orders - a.orders);
   }, [categoryTotals, topCategories, withOther]);
