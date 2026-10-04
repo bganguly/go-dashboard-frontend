@@ -752,6 +752,12 @@ export default function ApiExplorer() {
         <div style={{ maxWidth: "64rem", margin: "0 auto", padding: "0 1.5rem",
           height: "3.5rem", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <a href="https://bganguly.github.io/#go_dashboard"
+            onClick={e => {
+              e.preventDefault();
+              const url = 'https://bganguly.github.io/#go_dashboard';
+              try { if (window.opener && !window.opener.closed) { window.opener.location.href = url; window.close(); return; } } catch (_) {}
+              window.location.href = url;
+            }}
             style={{ display: "flex", alignItems: "center", gap: "0.5rem",
               color: "#71717a", textDecoration: "none", fontSize: "0.875rem" }}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
