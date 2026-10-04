@@ -155,10 +155,11 @@ export default function Chart({ endpoint = "/api/aggregates", topN = DEFAULT_TOP
     () => rawData.reduce((sum, day) => sum + Object.values(day.categories ?? {}).reduce((s, c) => s + (c.totalOrders ?? 0), 0), 0),
     [rawData],
   );
+  if (apiTotal != null) { stableTotalRef.current = apiTotal; }
   const matchedOrders = apiTotal ?? stableTotalRef.current ?? summedCategoryOrders;
 
   useEffect(() => {
-    if (apiTotal != null) { stableTotalRef.current = apiTotal; onTotalChangeRef.current?.(apiTotal); }
+    if (apiTotal != null) { onTotalChangeRef.current?.(apiTotal); }
   }, [apiTotal]);
 
   const categoryTotals = useMemo(() => computeTotals(rawData), [rawData]);
