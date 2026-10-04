@@ -95,13 +95,11 @@ export default function Chart({ endpoint = "/api/aggregates", topN = DEFAULT_TOP
 
     abortRef.current?.abort();
     const ctrl = new AbortController(); abortRef.current = ctrl;
-    console.log("[Chart] fetch START — apiTotal (before):", apiTotal, "rawData days:", rawData.length);
     setLoading(true); setError(null);
     try {
       const res = await fetch(`${endpoint}?${params}`, { signal: ctrl.signal });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const json = await res.json();
-      console.log("[Chart] fetch DONE — json.totalOrders:", json.totalOrders, "data days:", (json.data ?? []).length);
       setRawData(Array.isArray(json.data) ? json.data : []);
       setApiTotal(typeof json.totalOrders === "number" ? json.totalOrders : null);
     } catch (err) {
@@ -157,7 +155,6 @@ export default function Chart({ endpoint = "/api/aggregates", topN = DEFAULT_TOP
     () => rawData.reduce((sum, day) => sum + Object.values(day.categories ?? {}).reduce((s, c) => s + (c.totalOrders ?? 0), 0), 0),
     [rawData],
   );
-  console.log("[Chart] render — loading:", loading, "apiTotal:", apiTotal, "summedCategoryOrders:", summedCategoryOrders, "Total tile will show:", loading ? "skeleton" : (apiTotal ?? summedCategoryOrders));
   useEffect(() => {
     if (apiTotal != null) { onTotalChangeRef.current?.(apiTotal); }
   }, [apiTotal]);
@@ -169,15 +166,13 @@ export default function Chart({ endpoint = "/api/aggregates", topN = DEFAULT_TOP
 
   const seriesRanked = useMemo(() => {
     const entries = topCategories.map(cat => ({ key: cat, orders: categoryTotals.find(c => c.category === cat)?.orders ?? 0 }));
-    console.log("[Chart] seriesRanked recompute — loading:", loading, "withOther:", withOther,
-      "named entries:", entries.map(e => `${e.key}=${e.orders}`).join(", "));
     if (withOther) {
-      const othersEntry = categoryTotals.find(c => isOther(c.category));
-      console.log("[Chart] othersEntry from categoryTotals:", othersEntry, "all categoryTotals categories:", categoryTotals.map(c => c.category));
-      entries.push({ key: OTHER_KEY, orders: othersEntry?.orders ?? 0 });
+      const topOrdersSum = entries.reduce((s, e) => s + e.orders, 0);
+      const othersOrders = Math.max(0, (apiTotal ?? summedCategoryOrders) - topOrdersSum);
+      entries.push({ key: OTHER_KEY, orders: othersOrders });
     }
     return entries.sort((a, b) => b.orders - a.orders);
-  }, [categoryTotals, topCategories, withOther, loading]);
+  }, [categoryTotals, topCategories, withOther, apiTotal, summedCategoryOrders]);
 
   const seriesKeys = useMemo(() => seriesRanked.filter(s => showOthers || s.key !== OTHER_KEY).map(s => s.key), [seriesRanked, showOthers]);
   const colorMap   = useMemo(() => { const m = new Map<string,string>(); topCategories.forEach((c,i) => m.set(c, COLORS[i % COLORS.length])); return m; }, [topCategories]);
