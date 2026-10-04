@@ -76,7 +76,7 @@ export default function Chart({ endpoint = "/api/aggregates", topN = DEFAULT_TOP
   const abortRef = useRef<AbortController | null>(null);
   const dragTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [apiTotal, setApiTotal] = useState<number | null>(null);
-  const stableTotalRef = useRef<number | null>(null);
+
   // A brush drag calls fetchAggregates directly, then (via onRangeChange)
   // updates the parent's filters — which changes filters?.from/to and
   // re-fires the effect below with the exact same resulting request. Track
@@ -95,7 +95,7 @@ export default function Chart({ endpoint = "/api/aggregates", topN = DEFAULT_TOP
 
     abortRef.current?.abort();
     const ctrl = new AbortController(); abortRef.current = ctrl;
-    setLoading(true); setError(null); setApiTotal(null);
+    setLoading(true); setError(null);
     try {
       const res = await fetch(`${endpoint}?${params}`, { signal: ctrl.signal });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -155,8 +155,7 @@ export default function Chart({ endpoint = "/api/aggregates", topN = DEFAULT_TOP
     () => rawData.reduce((sum, day) => sum + Object.values(day.categories ?? {}).reduce((s, c) => s + (c.totalOrders ?? 0), 0), 0),
     [rawData],
   );
-  if (apiTotal != null) { stableTotalRef.current = apiTotal; }
-  const matchedOrders = apiTotal ?? stableTotalRef.current ?? summedCategoryOrders;
+  const matchedOrders = apiTotal ?? summedCategoryOrders;
 
   useEffect(() => {
     if (apiTotal != null) { onTotalChangeRef.current?.(apiTotal); }
