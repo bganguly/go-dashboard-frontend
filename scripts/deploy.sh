@@ -25,7 +25,7 @@ printf '\n=== go-dashboard-frontend ===\n\n'
 printf '  [1] Local  — Vite dev server on localhost'
 (( _local_running )) && printf ' [running]' || printf ' [not detected]'
 printf '\n'
-printf '  [2] AWS    — App Runner · scales to zero · ~$0/mo at idle\n'
+printf '  [2] AWS    — App Runner · min 1 instance · ~$2.56/mo at idle\n'
 printf '\nChoice [1/2, default 2]: '
 read -r _MODE
 case "${_MODE:-2}" in
@@ -215,7 +215,7 @@ _SVC_ARN=$(aws apprunner list-services --region "$AWS_REGION" \
 
 _env_vars="{\"BACKEND_URL\":\"${BACKEND_URL}\"}"
 _source_config="{\"ImageRepository\":{\"ImageIdentifier\":\"${IMAGE}\",\"ImageConfiguration\":{\"Port\":\"8080\",\"RuntimeEnvironmentVariables\":${_env_vars}},\"ImageRepositoryType\":\"ECR\"},\"AuthenticationConfiguration\":{\"AccessRoleArn\":\"${AR_ECR_ROLE_ARN}\"},\"AutoDeploymentsEnabled\":false}"
-_instance_config="{\"Cpu\":\"512\",\"Memory\":\"1024\"}"
+_instance_config="{\"Cpu\":\"256\",\"Memory\":\"512\"}"
 
 if [[ -z "$_SVC_ARN" ]]; then
   printf '\n=== creating App Runner service: %s ===\n' "$SERVICE_NAME"
