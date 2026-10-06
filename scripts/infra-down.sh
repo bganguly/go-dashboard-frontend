@@ -2,47 +2,55 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-cd "$ROOT_DIR"
+ENV_FILE="$ROOT_DIR/.env.aws"
+AWS_REGION="us-east-1"
+SERVICE_NAME="go-dash-frontend"
+ECR_REPO="go-dash-frontend"
 
-_MODE=""
-_GCP_PROJECT=""
-_GCP_REGION=""
-
-# ── Helpers ───────────────────────────────────────────────────────────────────
-
-_delete_service() {
-  local svc="$1"
-  printf '\nDeleting Cloud Run service: %s\n' "$svc"
-  gcloud run services delete "$svc" \
-    --region "$_GCP_REGION" --project "$_GCP_PROJECT" --quiet 2>/dev/null \
-    && printf '  Deleted.\n' || printf '  Not found or already deleted.\n'
-}
+_CHOICE=""
 
 # ── Preflight ─────────────────────────────────────────────────────────────────
 
 _run_preflight() {
   printf '\n=== go-dashboard-frontend teardown ===\n\n'
-  printf '  [1] Lite  — delete Cloud Run service go-dash-lite-frontend\n'
-  printf '  [2] Full  — delete Cloud Run service go-dash-full-frontend\n'
-  printf '  [3] Both\n'
-  printf '\nChoice [1/2/3]: '
-  read -r _MODE
+  printf '  [1] Delete App Runner service only (keep ECR)\n'
+  printf '  [2] Delete App Runner + ECR repo (full teardown)\n'
+  printf '\nChoice [1/2, default 1]: '
+  read -r _CHOICE
 
-  _GCP_PROJECT=$(gcloud config get-value project 2>/dev/null || true)
-  [[ -n "$_GCP_PROJECT" ]] || { printf 'No GCP project set.\n' >&2; exit 1; }
-  _GCP_REGION=$(gcloud config get-value compute/region 2>/dev/null || true)
-  _GCP_REGION="${_GCP_REGION:-us-central1}"
+  command -v aws >/dev/null 2>&1 || { printf 'aws CLI not found.\n' >&2; exit 1; }
+  aws sts get-caller-identity >/dev/null 2>&1 || { printf 'AWS credentials not configured.\n' >&2; exit 1; }
 }
 
 # ── Teardown ──────────────────────────────────────────────────────────────────
 
 _teardown() {
-  case "${_MODE:-}" in
-    1) _delete_service "go-dash-lite-frontend" ;;
-    2) _delete_service "go-dash-full-frontend" ;;
-    3) _delete_service "go-dash-lite-frontend"; _delete_service "go-dash-full-frontend" ;;
-    *) printf 'Invalid choice.\n'; exit 1 ;;
+  local _SVC_ARN=""
+  [[ -f "$ENV_FILE" ]] && _SVC_ARN=$(grep -E '^SERVICE_ARN=' "$ENV_FILE" | cut -d= -f2- | tr -d '"' || true)
+  if [[ -z "$_SVC_ARN" ]]; then
+    _SVC_ARN=$(aws apprunner list-services --region "$AWS_REGION" \
+      --query "ServiceSummaryList[?ServiceName=='${SERVICE_NAME}'].ServiceArn" \
+      --output text 2>/dev/null | awk 'NF{print $1;exit}' || true)
+  fi
+
+  if [[ -n "$_SVC_ARN" ]]; then
+    printf 'Deleting App Runner service %s...\n' "$SERVICE_NAME"
+    aws apprunner delete-service --service-arn "$_SVC_ARN" --region "$AWS_REGION" >/dev/null
+    printf '  Delete initiated.\n'
+  else
+    printf '  App Runner service not found — skipping.\n'
+  fi
+
+  case "${_CHOICE:-1}" in
+    2)
+      printf 'Deleting ECR repo %s...\n' "$ECR_REPO"
+      aws ecr delete-repository --repository-name "$ECR_REPO" --region "$AWS_REGION" --force >/dev/null 2>&1 \
+        || printf '  ECR repo not found — skipping.\n'
+      printf '  ECR repo deleted.\n'
+      ;;
   esac
+
+  [[ -f "$ENV_FILE" ]] && rm -f "$ENV_FILE" && printf 'Removed %s\n' "$ENV_FILE"
   printf '\nTeardown complete.\n'
 }
 
