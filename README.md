@@ -10,10 +10,11 @@ deployed as a GCP Cloud Run service. Nginx acts as a BFF proxy — routing `/api
 
 | Endpoint | URL |
 |---|---|
-| **App** | available on demand via `deploy.sh` |
+| **App** | https://rk2yd5fmyd.us-east-1.awsapprunner.com |
+| **API Explorer** | https://rk2yd5fmyd.us-east-1.awsapprunner.com/api-explorer |
 | **Portfolio demo** | https://bganguly.github.io/#go_dashboard |
 
-> Cloud Run scales to zero when idle; run `deploy.sh` to provision GCP infrastructure and start the service.
+> App Runner keeps a minimum of one instance running; the first request after a period of low traffic may have a slight delay.
 
 ---
 
