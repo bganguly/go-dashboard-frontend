@@ -30,7 +30,7 @@ export default function ApiExplorer() {
       readyTimer.current = setTimeout(() => setWakeStatus(s => (s === "ready" ? null : s)), 1200);
     };
 
-    fetch("/api/runtime").then(r => r.ok ? r.json() : Promise.reject()).then(markReady).catch(markReady);
+    fetch("/api/orders?pageSize=10&sort=placedAt&dir=desc").then(r => r.ok ? r.json() : Promise.reject()).then(markReady).catch(markReady);
 
     return () => {
       if (slowTimer.current)    clearTimeout(slowTimer.current);
@@ -71,7 +71,7 @@ export default function ApiExplorer() {
                 background: "rgba(251,191,36,0.12)", border: "1px solid rgba(251,191,36,0.30)",
                 color: "#fbbf24", borderRadius: "0.5rem", padding: "0.375rem 0.75rem", fontSize: "0.75rem" }}>
                 <Spinner />
-                Backend waking up —
+                Probing GET /api/orders —
                 <span style={{ fontFamily: "monospace", marginLeft: "4px" }}>{(wakeMs / 1000).toFixed(1)}s</span>
               </div>
             )}
