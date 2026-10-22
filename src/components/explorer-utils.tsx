@@ -21,7 +21,7 @@ export async function fetchTimed(path: string): Promise<RunResult> {
 }
 
 export function timingClass(ms: number) {
-  if (ms < 300) return { bg: "rgba(16,185,129,0.12)", color: "#34d399", border: "1px solid rgba(16,185,129,0.25)" };
+  if (ms < 500) return { bg: "rgba(16,185,129,0.12)", color: "#34d399", border: "1px solid rgba(16,185,129,0.25)" };
   if (ms < 1000) return { bg: "rgba(245,158,11,0.12)", color: "#fbbf24", border: "1px solid rgba(245,158,11,0.25)" };
   return { bg: "rgba(239,68,68,0.12)", color: "#f87171", border: "1px solid rgba(239,68,68,0.25)" };
 }
