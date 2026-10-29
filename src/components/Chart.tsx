@@ -242,7 +242,7 @@ export default function Chart({ endpoint = "/api/aggregates", topN = DEFAULT_TOP
                 numerically equal left/right margin still leaves far less real
                 buffer on the right — right is padded by the Y-axis width too
                 so both sides give the Brush's edge labels the same clearance. */}
-            <BarChart data={buckets} margin={{ top: 8, right: 8 + 56, left: 8, bottom: 0 }}>
+            <BarChart key={`${filters?.from ?? ''}_${filters?.to ?? ''}`} data={buckets} margin={{ top: 8, right: 8 + 56, left: 8, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} />
               <XAxis dataKey="date" fontSize={12} tickMargin={8} stroke={axisColor} tick={{ fill: axisColor }} />
               <YAxis fontSize={12} width={56} stroke={axisColor} tick={{ fill: axisColor }} tickFormatter={compact} />
