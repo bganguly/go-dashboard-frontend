@@ -98,22 +98,40 @@ export default function App() {
     return () => { cancelled = true; };
   }, []);
 
+  const applyBounds = useCallback((d: { from: string; to: string }) => {
+    setDatasetBounds(d);
+    const end = new Date(`${d.to}T00:00:00Z`);
+    end.setUTCDate(end.getUTCDate() - 90);
+    setFilters((f) =>
+      f.from || f.to ? f : { ...f, from: end.toISOString().slice(0, 10), to: d.to }
+    );
+  }, []);
+
   useEffect(() => {
     let cancelled = false;
     fetch("/api/dataset-bounds")
       .then((r) => (r.ok ? r.json() : Promise.reject()))
       .then((d: { from: string; to: string }) => {
         if (cancelled || !d.from || !d.to) return;
-        setDatasetBounds(d);
-        const end = new Date(`${d.to}T00:00:00Z`);
-        end.setUTCDate(end.getUTCDate() - 90);
-        setFilters((f) =>
-          f.from || f.to ? f : { ...f, from: end.toISOString().slice(0, 10), to: d.to }
-        );
+        applyBounds(d);
       })
       .catch(() => {});
     return () => { cancelled = true; };
-  }, []);
+  }, [applyBounds]);
+
+  // Retry after backend wakes up if the initial fetch failed (cold-start path).
+  useEffect(() => {
+    if (!backendReady || datasetBounds) return;
+    let cancelled = false;
+    fetch("/api/dataset-bounds")
+      .then((r) => (r.ok ? r.json() : Promise.reject()))
+      .then((d: { from: string; to: string }) => {
+        if (cancelled || !d.from || !d.to) return;
+        applyBounds(d);
+      })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [backendReady, datasetBounds, applyBounds]);
 
   const handleRows = useCallback((rows: SearchRow[]) => {
     const incoming: RegionOption[] = [];
