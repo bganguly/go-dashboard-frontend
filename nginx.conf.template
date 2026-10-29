@@ -10,7 +10,13 @@ server {
         proxy_set_header X-Real-IP $remote_addr;
     }
 
+    location ~* \.(js|css|woff2?|ttf|svg|ico|png|jpg|webp)$ {
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+    }
+
     location / {
         try_files $uri $uri/ /index.html;
+        add_header Cache-Control "no-cache, no-store, must-revalidate";
     }
 }
