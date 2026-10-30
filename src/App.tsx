@@ -101,7 +101,7 @@ export default function App() {
   const applyBounds = useCallback((d: { from: string; to: string }) => {
     setDatasetBounds(d);
     const end = new Date(`${d.to}T00:00:00Z`);
-    end.setUTCDate(end.getUTCDate() - 90);
+    end.setUTCDate(end.getUTCDate() - 89);
     setFilters((f) =>
       f.from || f.to ? f : { ...f, from: end.toISOString().slice(0, 10), to: d.to }
     );

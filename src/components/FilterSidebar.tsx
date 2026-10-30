@@ -229,7 +229,7 @@ export default function FilterSidebar({
                 patch({ from: datasetBounds.from, to: datasetBounds.to });
               } else {
                 const d = new Date(`${datasetBounds.to}T00:00:00Z`);
-                d.setUTCDate(d.getUTCDate() - 90);
+                d.setUTCDate(d.getUTCDate() - 89);
                 patch({ from: d.toISOString().slice(0, 10), to: datasetBounds.to });
               }
             }}
