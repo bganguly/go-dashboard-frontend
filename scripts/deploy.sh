@@ -110,12 +110,7 @@ _ensure_ecr() {
     aws ecr create-repository --repository-name "$ECR_REPO" --region "$AWS_REGION" >/dev/null
   }
 
-  TAG=$(find "$ROOT_DIR/src" "$ROOT_DIR/index.html" "$ROOT_DIR/package.json" \
-      "$ROOT_DIR/vite.config.ts" "$ROOT_DIR/Dockerfile" "$ROOT_DIR/nginx.conf.template" \
-      "$ROOT_DIR/buildspec.yml" \
-      -type f 2>/dev/null | sort | xargs cat 2>/dev/null \
-    | _shasum | cut -c1-16 || true)
-  TAG="${TAG:-$(date +%Y%m%d%H%M%S)}"
+  TAG=$(git -C "$ROOT_DIR" rev-parse HEAD 2>/dev/null | cut -c1-16 || date +%Y%m%d%H%M%S)
   IMAGE="${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPO}:${TAG}"
   IMAGE_CACHE="${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPO}:cache"
   ECR_URI="${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
