@@ -111,6 +111,7 @@ _ensure_ecr() {
   }
 
   TAG=$(git -C "$ROOT_DIR" rev-parse HEAD 2>/dev/null | cut -c1-16 || date +%Y%m%d%H%M%S)
+  printf '  ECR tag (git SHA): %s\n' "$TAG"
   IMAGE="${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPO}:${TAG}"
   IMAGE_CACHE="${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPO}:cache"
   ECR_URI="${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
@@ -264,6 +265,7 @@ _deploy_apprunner() {
   _source_config="{\"ImageRepository\":{\"ImageIdentifier\":\"${IMAGE}\",\"ImageConfiguration\":{\"Port\":\"8080\",\"RuntimeEnvironmentVariables\":${_env_vars}},\"ImageRepositoryType\":\"ECR\"},\"AuthenticationConfiguration\":{\"AccessRoleArn\":\"${AR_ECR_ROLE_ARN}\"},\"AutoDeploymentsEnabled\":false}"
   _instance_config="{\"Cpu\":\"256\",\"Memory\":\"512\"}"
 
+  printf '  Deploying image: %s\n' "$IMAGE"
   if [[ -z "$_SVC_ARN" ]]; then
     printf '\n=== creating App Runner service: %s ===\n' "$SERVICE_NAME"
     _SVC_ARN=$(aws apprunner create-service \
