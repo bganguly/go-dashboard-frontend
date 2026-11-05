@@ -30,7 +30,7 @@ export default function ApiExplorer() {
       readyTimer.current = setTimeout(() => setWakeStatus(s => (s === "ready" ? null : s)), 1200);
     };
 
-    fetch("/api/orders?pageSize=10&sort=placedAt&dir=desc").then(r => r.ok ? r.json() : Promise.reject()).then(markReady).catch(markReady);
+    fetch("/api/orders?size=20&sort=placedAt,desc").then(r => r.ok ? r.json() : Promise.reject()).then(markReady).catch(markReady);
 
     return () => {
       if (slowTimer.current)    clearTimeout(slowTimer.current);
