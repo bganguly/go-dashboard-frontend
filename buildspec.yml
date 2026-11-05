@@ -7,7 +7,7 @@ phases:
       - docker pull $IMAGE_CACHE || true
   build:
     commands:
-      - docker build --cache-from $IMAGE_CACHE -t $IMAGE -t $IMAGE_CACHE .
+      - docker build --no-cache -t $IMAGE -t $IMAGE_CACHE .
   post_build:
     commands:
       - docker push $IMAGE
