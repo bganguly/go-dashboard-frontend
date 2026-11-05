@@ -14,7 +14,7 @@ export function OrdersCard() {
   async function run() {
     setLoading(true); setErr(null); setResult(null);
     try {
-      const r = await fetchTimed("/api/orders?size=10&sort=placedAt,desc");
+      const r = await fetchTimed("/api/orders?size=20&sort=placedAt,desc");
       setResult(r);
     } catch (e) { setErr(String(e)); }
     setLoading(false);
@@ -28,7 +28,7 @@ export function OrdersCard() {
     <Card path="/api/orders" subtitle="Latest orders — paginated, sorted by date descending">
       <div style={ROW}>
         <div style={PARAMS}>
-          <MonoParam label="size" val="10" />
+          <MonoParam label="size" val="20" />
           <MonoParam label="sort" val="placedAt,desc" />
         </div>
         <RunBtn onClick={run} loading={loading} />
@@ -37,7 +37,7 @@ export function OrdersCard() {
       {err && <ErrBox msg={err} />}
       {result && !loading && (
         <>
-          <MetaBar ms={result.ms} label={`${Number(total).toLocaleString()} total orders · showing first 10`} />
+          <MetaBar ms={result.ms} label={`${Number(total).toLocaleString()} total orders · showing first 20`} />
           {rows.length > 0 && <OrderTable rows={rows} />}
           <RawJson data={result.json} />
         </>
@@ -56,7 +56,7 @@ export function SearchCard() {
     if (!q.trim()) return;
     setLoading(true); setErr(null); setResult(null);
     try {
-      const r = await fetchTimed("/api/orders?q=" + encodeURIComponent(q.trim()) + "&size=10");
+      const r = await fetchTimed("/api/orders?q=" + encodeURIComponent(q.trim()) + "&size=20&sort=placedAt,desc");
       setResult(r);
     } catch (e) { setErr(String(e)); }
     setLoading(false);
@@ -78,7 +78,8 @@ export function SearchCard() {
               color: "#e4e4e7", borderRadius: "0.5rem", padding: "0.375rem 0.75rem",
               fontSize: "0.8rem", fontFamily: "monospace", outline: "none", width: "220px" }}
           />
-          <MonoParam label="size" val="10" />
+          <MonoParam label="size" val="20" />
+          <MonoParam label="sort" val="placedAt,desc" />
         </div>
         <RunBtn onClick={run} loading={loading} />
       </div>
@@ -99,7 +100,7 @@ export function SearchCard() {
 
 export function AggregatesCard() {
   const today  = new Date().toISOString().slice(0, 10);
-  const ago60  = new Date(Date.now() - 60 * 864e5).toISOString().slice(0, 10);
+  const ago60  = new Date(Date.now() - 89 * 864e5).toISOString().slice(0, 10);
   const [from, setFrom] = useState(ago60);
   const [to,   setTo]   = useState(today);
   const [loading, setLoading] = useState(false);
@@ -110,7 +111,7 @@ export function AggregatesCard() {
     if (!from || !to) return;
     setLoading(true); setErr(null); setResult(null);
     try {
-      const r = await fetchTimed(`/api/aggregates?from=${from}&to=${to}&topCategories=3`);
+      const r = await fetchTimed(`/api/aggregates?from=${from}&to=${to}&topCategories=4`);
       setResult(r);
     } catch (e) { setErr(String(e)); }
     setLoading(false);
@@ -136,7 +137,7 @@ export function AggregatesCard() {
           <span style={{ fontSize: "0.6875rem", fontFamily: "monospace", color: "#52525b" }}>to</span>
           <input type="date" value={to} onChange={e => setTo(e.target.value)}
             style={{ ...DATE_INPUT, width: "150px" }} />
-          <MonoParam label="topCategories" val="3" />
+          <MonoParam label="topCategories" val="4" />
         </div>
         <RunBtn onClick={run} loading={loading} />
       </div>
@@ -283,7 +284,7 @@ export function BrushCard() {
     if (!from || !to) return;
     setFetch(true);
     try {
-      const r2 = await fetchTimed(`/api/aggregates?from=${from}&to=${to}&topCategories=1`);
+      const r2 = await fetchTimed(`/api/aggregates?from=${from}&to=${to}&topCategories=4`);
       setBRes({ ...r2, from, to });
     } catch {} finally { setFetch(false); }
   }
@@ -291,9 +292,9 @@ export function BrushCard() {
   async function initBrush() {
     setPhase("loading");
     const today = new Date().toISOString().slice(0, 10);
-    const ago   = new Date(Date.now() - 365 * 864e5).toISOString().slice(0, 10);
+    const ago   = new Date(Date.now() - 89 * 864e5).toISOString().slice(0, 10);
     try {
-      const { json, ms } = await fetchTimed(`/api/aggregates?from=${ago}&to=${today}&topCategories=1`);
+      const { json, ms } = await fetchTimed(`/api/aggregates?from=${ago}&to=${today}&topCategories=4`);
       const raw  = (json as { data?: DayRow[] })?.data ?? (json as DayRow[]);
       const data = Array.isArray(raw) ? raw as DayRow[] : [];
       if (!data.length) throw new Error("no data");
